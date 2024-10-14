@@ -1,6 +1,7 @@
 import { Body, Controller, HttpException, HttpStatus, Post } from '@nestjs/common';
 import { IsString } from 'class-validator';
 import { IsValidExpression } from './valid-expression.decorator';
+import { CalculatorService } from './calculator.service';
 
 class ExpressionDto {
   @IsString()
@@ -10,19 +11,17 @@ class ExpressionDto {
 
 @Controller('evaluate')
 export class CalculatorController {
+  constructor(private readonly calculatorService: CalculatorService) {}
   @Post()
-  evaluate(@Body() expressionDto: ExpressionDto): any {
+  async evaluate(@Body() expressionDto: ExpressionDto): Promise<{result: number}> {
     const { expression } = expressionDto;
 
     try {
-      const result = this.evaluateExpression(expression);
+      const result = await this.calculatorService.evaluate(expression);
       return { result };
     } catch (error) {
       //todo creat global error handler
       throw new HttpException('Error evaluating expression', HttpStatus.INTERNAL_SERVER_ERROR);
     }
-  }
-  private evaluateExpression(expression: string): number {
-    return Function(`"use strict"; return (${expression})`)();
   }
 }
